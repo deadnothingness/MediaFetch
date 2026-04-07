@@ -18,6 +18,7 @@ downloads/
 
 # Environment variables
 .env
+.qwen
 
 # IDE
 .vscode/
