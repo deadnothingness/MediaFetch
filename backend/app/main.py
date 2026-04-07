@@ -6,6 +6,7 @@ from .database import engine, Base, get_db
 from . import models, schemas
 from .services.downloader import download_media
 from .services.llm_parser import parse_request
+from .config import settings
 
 import os
 
@@ -24,7 +25,7 @@ app.add_middleware(
 )
 
 # Path to frontend folder
-FRONTEND_PATH = os.path.join(os.path.dirname(__file__), "../../frontend")
+FRONTEND_PATH = settings.FRONTEND_PATH
 
 @app.get("/")
 async def serve_frontend():
@@ -41,7 +42,7 @@ async def serve_js():
     """Serve JavaScript file"""
     return FileResponse(os.path.join(FRONTEND_PATH, "app.js"), media_type="application/javascript")
 
-def process_download(task_id: int, url: str, format_type: str, quality: str, db: Session):
+def process_download(task_id: int, url: str, format_type: str, quality: str):
     """Background task to process download"""
     # Create a new db session for background task (avoid shared session issues)
     from .database import SessionLocal
@@ -51,9 +52,9 @@ def process_download(task_id: int, url: str, format_type: str, quality: str, db:
         if task:
             task.status = models.TaskStatus.DOWNLOADING
             db.commit()
-            
+
             file_path, error = download_media(url, format_type, quality, task_id)
-            
+
             if error:
                 task.status = models.TaskStatus.FAILED
                 task.error_message = error
@@ -87,12 +88,11 @@ async def create_download(
     db.refresh(task)
     
     background_tasks.add_task(
-        process_download, 
-        task.id, 
-        request.url, 
-        request.format, 
-        request.quality, 
-        db
+        process_download,
+        task.id,
+        request.url,
+        request.format,
+        request.quality
     )
     
     return schemas.DownloadResponse(

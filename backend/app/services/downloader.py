@@ -1,9 +1,8 @@
 import yt_dlp
 import os
-import uuid
 from pathlib import Path
 
-# Папка для сохранения файлов
+# Directory for downloaded files
 DOWNLOAD_DIR = Path(__file__).parent.parent.parent / "downloads"
 DOWNLOAD_DIR.mkdir(exist_ok=True)
 
@@ -16,10 +15,10 @@ def get_quality_format(quality: str, format_type: str):
     }
     
     if format_type == 'mp3':
-        # Для аудио
+        # For audio
         return 'bestaudio/best'
     else:
-        # Для видео
+        # For video
         quality_str = quality_map.get(quality, 'best')
         return f'{quality_str}[ext=mp4]/best[ext=mp4]/best'
 
@@ -53,12 +52,12 @@ def download_media(url: str, format_type: str, quality: str, task_id: int) -> tu
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
-            # Получаем путь к скачанному файлу
+            # Get the path to the downloaded file
             if format_type == 'mp3':
-                # Для mp3 файл будет иметь расширение .mp3
+                # For mp3 the file will have a .mp3 extension
                 filename = ydl.prepare_filename(info).replace('.webm', '.mp3').replace('.m4a', '.mp3')
                 if not os.path.exists(filename):
-                    # Пробуем найти файл с другим расширением
+                    # Try to find the file with a different extension
                     base = os.path.splitext(ydl.prepare_filename(info))[0]
                     filename = base + '.mp3'
             else:

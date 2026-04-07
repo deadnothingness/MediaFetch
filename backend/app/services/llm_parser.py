@@ -57,7 +57,7 @@ async def parse_request(user_message: str) -> Dict[str, Any]:
                     LLM_API_URL,
                     headers={
                         "Content-Type": "application/json",
-                        "X-API-Key": QWEN_API_KEY,
+                        "Authorization": f"Bearer {QWEN_API_KEY}",   # исправлено
                     },
                     json={
                         "model": LLM_MODEL,

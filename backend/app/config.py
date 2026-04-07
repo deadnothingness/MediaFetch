@@ -1,12 +1,18 @@
-from pydantic_settings import BaseSettings
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pathlib import Path
 
 class Settings(BaseSettings):
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://mediafetch:mediafetch123@localhost:5432/mediafetch_db")
-    LLM_API_URL: str = os.getenv("LLM_API_URL", "http://localhost:11434/api/generate")  # для Ollama
-    LLM_MODEL: str = os.getenv("LLM_MODEL", "qwen2:0.5b")
+    # Database
+    DATABASE_URL: str = "postgresql://mediafetch:mediafetch123@postgres:5432/mediafetch_db"
+
+    # LLM
+    LLM_API_URL: str = "http://localhost:42005/v1/chat/completions"
+    LLM_MODEL: str = "coder-model"
+    QWEN_API_KEY: str = ""
+
+    # Frontend path (override in Docker)
+    FRONTEND_PATH: str = str(Path(__file__).parent.parent.parent / "frontend")
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 settings = Settings()
