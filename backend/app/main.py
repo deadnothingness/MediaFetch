@@ -1,13 +1,15 @@
 from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.orm import Session
 from .database import engine, Base, get_db
 from . import models, schemas
-from .services.downloader import download_media
+from .services.downloader import download_media, get_progress, update_progress
 from .services.llm_parser import parse_request
 from pathlib import Path
 
+import asyncio
+import json
 import os
 
 # Path to frontend folder – read from env or use default
@@ -61,6 +63,7 @@ def process_download(task_id: int, url: str, format_type: str, quality: str):
             else:
                 task.status = models.TaskStatus.COMPLETED
                 task.file_path = file_path
+                update_progress(task_id, 100)
             db.commit()
     finally:
         db.close()
@@ -150,3 +153,32 @@ async def parse_llm_request(request: schemas.LLMParseRequest):
         search_query=result.get("search_query"),
         original_message=request.message
     )
+
+@app.get("/tasks/{task_id}/progress")
+async def stream_progress(task_id: int, db: Session = Depends(get_db)):
+    """Stream download progress via Server-Sent Events."""
+    # First check if task exists
+    task = db.query(models.DownloadTask).filter(models.DownloadTask.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    async def event_generator():
+        while True:
+            progress = get_progress(task_id)
+            # Also check if task is completed or failed
+            task_status = db.query(models.DownloadTask).filter(models.DownloadTask.id == task_id).first()
+            if task_status:
+                if task_status.status == models.TaskStatus.COMPLETED:
+                    yield f"data: {json.dumps({'progress': 100, 'status': 'completed'})}\n\n"
+                    break
+                elif task_status.status == models.TaskStatus.FAILED:
+                    yield f"data: {json.dumps({'progress': progress, 'status': 'failed', 'error': task_status.error_message})}\n\n"
+                    break
+            
+            yield f"data: {json.dumps({'progress': progress, 'status': 'downloading'})}\n\n"
+            
+            if progress >= 100:
+                break
+            await asyncio.sleep(0.5)
+    
+    return StreamingResponse(event_generator(), media_type="text/event-stream")

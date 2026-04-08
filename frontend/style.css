@@ -355,3 +355,29 @@ button:disabled {
         opacity: 1;
     }
 }
+
+/* Progress bar styles */
+.progress-container {
+    margin: 10px 0;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar {
+    height: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+    color: #333;
+    font-weight: bold;
+}

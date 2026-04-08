@@ -1,6 +1,22 @@
 import yt_dlp
 import os
 from pathlib import Path
+import threading
+from typing import Dict
+
+# Store progress for each task (in-memory, for SSE)
+download_progress: Dict[int, int] = {}
+_progress_lock = threading.Lock()
+
+def update_progress(task_id: int, percent: int):
+    """Thread-safe progress update."""
+    with _progress_lock:
+        download_progress[task_id] = min(percent, 100)
+
+def get_progress(task_id: int) -> int:
+    """Get current progress for a task."""
+    with _progress_lock:
+        return download_progress.get(task_id, 0)
 
 # Directory for downloaded files
 DOWNLOAD_DIR = Path(__file__).parent.parent.parent / "downloads"
@@ -28,6 +44,14 @@ def download_media(url: str, format_type: str, quality: str, task_id: int) -> tu
     """
     output_template = str(DOWNLOAD_DIR / f"task_{task_id}_%(title)s.%(ext)s")
     
+    def progress_hook(d):
+        if d['status'] == 'downloading':
+            total = d.get('total_bytes') or d.get('total_bytes_estimate')
+            if total:
+                percent = int(d['downloaded_bytes'] / total * 100)
+                update_progress(task_id, percent)
+
+
     if format_type == 'mp3':
         ydl_opts = {
             'format': 'bestaudio/best',
@@ -39,6 +63,7 @@ def download_media(url: str, format_type: str, quality: str, task_id: int) -> tu
             'outtmpl': output_template,
             'quiet': True,
             'no_warnings': True,
+            'progress_hooks': [progress_hook],
         }
     else:
         format_str = get_quality_format(quality, format_type)

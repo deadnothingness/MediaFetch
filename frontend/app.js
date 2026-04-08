@@ -87,7 +87,7 @@ function displayTasks(tasks) {
     }
 
     tasksList.innerHTML = tasks.map(task => `
-        <div class="task-card">
+        <div class="task-card" data-task-id="${task.id}">
             <div class="task-header">
                 <span class="task-status ${getStatusClass(task.status)}">
                     ${formatStatus(task.status)}
@@ -100,6 +100,12 @@ function displayTasks(tasks) {
                 📁 ${task.format.toUpperCase()} • 🎚️ ${task.quality} quality
                 ${task.created_at ? ` • 🕐 ${formatDate(task.created_at)}` : ''}
             </div>
+            ${task.status === 'downloading' ? `
+                <div class="progress-container">
+                    <div class="progress-bar" style="width: ${task.progress || 0}%"></div>
+                    <div class="progress-text">${task.progress || 0}%</div>
+                </div>
+            ` : ''}
             ${task.status === 'completed' && task.id ? `
                 <a href="${API_BASE_URL}/download/${task.id}" class="download-link" download>
                     ⬇️ Download File
@@ -112,6 +118,16 @@ function displayTasks(tasks) {
             ` : ''}
         </div>
     `).join('');
+    
+    // Subscribe to progress for downloading tasks
+    tasks.forEach(task => {
+        if (task.status === 'downloading') {
+            const taskCard = document.querySelector(`.task-card[data-task-id="${task.id}"]`);
+            if (taskCard) {
+                subscribeToProgress(task.id, taskCard);
+            }
+        }
+    });
 }
 
 // ---- Download logic ----
@@ -312,3 +328,38 @@ document.addEventListener('DOMContentLoaded', () => {
         stopAutoRefresh();
     });
 });
+
+function subscribeToProgress(taskId, taskCard) {
+    const eventSource = new EventSource(`${API_BASE_URL}/tasks/${taskId}/progress`);
+    
+    eventSource.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        const progressBar = taskCard.querySelector('.progress-bar');
+        const progressText = taskCard.querySelector('.progress-text');
+        
+        if (progressBar) {
+            progressBar.style.width = `${data.progress}%`;
+            progressBar.setAttribute('aria-valuenow', data.progress);
+        }
+        if (progressText) {
+            progressText.textContent = `${data.progress}%`;
+        }
+        
+        if (data.status === 'completed') {
+            eventSource.close();
+            // Refresh tasks to show download button
+            fetchTasks();
+        } else if (data.status === 'failed') {
+            eventSource.close();
+            // Show error
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = `⚠️ Error: ${data.error || 'Download failed'}`;
+            taskCard.appendChild(errorDiv);
+        }
+    };
+    
+    eventSource.onerror = function() {
+        eventSource.close();
+    };
+}
