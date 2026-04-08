@@ -29,7 +29,7 @@
 MediaFetch is a full-stack web application that lets users download media from YouTube and VK in their preferred format (MP3 or MP4) and quality (low, medium, or high). It features:
 
 - **Manual download form** — paste a URL, choose format and quality, and start downloading.
-- **AI chat assistant** — type a natural language request like *"download this video as MP4: <URL>"* and the assistant fills in the form for you.
+- **AI chat assistant** — type a natural language request like *"download this video as MP4: `URL`"* and the assistant fills in the form for you.
 - **Task-based download system** — every download is tracked as a task with real-time status updates (pending → downloading → completed/failed).
 - **File management** — completed files are served directly from the backend via a download link.
 
@@ -40,7 +40,7 @@ The application is built with FastAPI on the backend and vanilla HTML/CSS/JS on 
 ## Technology Stack
 
 | Layer | Technology |
-|---|---|
+| --- | --- |
 | **Backend framework** | [FastAPI](https://fastapi.tiangolo.com/) 0.115 |
 | **Database** | PostgreSQL (via Docker Compose) or SQLite |
 | **ORM** | SQLAlchemy 2.0 |
@@ -100,23 +100,23 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 ### Local Development
 
-#### Prerequisites
+#### Local Development — Prerequisites
 
 - **Python 3.10+**
 - **Docker & Docker Compose** (for PostgreSQL)
 - **ffmpeg** (`sudo apt install ffmpeg` on Ubuntu)
 - **Git**
 
-#### Step-by-Step
+#### Local Development — Step-by-Step
 
-**1. Clone the repository**
+#### 1. Clone the repository
 
 ```bash
 git clone <repository-url>
 cd MediaFetch
 ```
 
-**2. Start the database**
+#### 2. Start the database
 
 ```bash
 cd backend
@@ -124,12 +124,13 @@ docker-compose up -d postgres
 ```
 
 This launches a PostgreSQL 16 container with:
+
 - User: `mediafetch`
 - Password: `mediafetch123`
 - Database: `mediafetch_db`
 - Data persisted in a named volume `postgres_data`.
 
-**3. Set up the Python environment**
+#### 3. Set up the Python environment
 
 ```bash
 python3 -m venv venv
@@ -137,7 +138,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-**4. Configure environment variables**
+#### 4. Configure environment variables
 
 ```bash
 cp .env.example .env
@@ -152,14 +153,14 @@ LLM_MODEL=qwen2:0.5b
 # QWEN_API_KEY=your-api-key-here   # Optional — leave empty to use regex fallback
 ```
 
-**5. Run the server**
+#### 5. Run the server
 
 ```bash
 cd backend
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-**6. Open the application**
+#### 6. Open the application
 
 Navigate to `http://localhost:8000` in your browser.
 
@@ -167,16 +168,16 @@ Navigate to `http://localhost:8000` in your browser.
 
 ### Production Deployment on a VM
 
-#### Prerequisites
+#### Production Deployment — Prerequisites
 
 - Ubuntu 22.04+ VM with SSH access.
 - Docker & Docker Compose installed.
 - A domain name (optional, for reverse proxy setup).
 - ffmpeg installed on the VM.
 
-#### Step-by-Step
+#### Production Deployment — Step-by-Step
 
-**1. Install system dependencies**
+#### 1. Install system dependencies
 
 ```bash
 sudo apt update
@@ -185,7 +186,7 @@ sudo usermod -aG docker $USER
 # Log out and back in for the docker group to take effect.
 ```
 
-**2. Clone and configure**
+#### 2. Clone and configure
 
 ```bash
 git clone <repository-url> ~/mediafetch
@@ -199,14 +200,14 @@ Edit `.env` with the production database URL:
 DATABASE_URL=postgresql://mediafetch:mediafetch123@localhost:5432/mediafetch_db
 ```
 
-**3. Start the database**
+#### 3. Start the database
 
 ```bash
 cd backend
 docker-compose up -d postgres
 ```
 
-**4. Install Python dependencies**
+#### 4. Install Python dependencies
 
 ```bash
 python3 -m venv venv
@@ -214,7 +215,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-**5. Run with Gunicorn + Uvicorn workers (production)**
+#### 5. Run with Gunicorn + Uvicorn workers (production)
 
 ```bash
 pip install gunicorn
@@ -226,7 +227,7 @@ gunicorn app.main:app \
   --error-logfile -
 ```
 
-**6. (Optional) Set up a systemd service**
+#### 6. (Optional) Set up a systemd service
 
 Create `/etc/systemd/system/mediafetch.service`:
 
@@ -259,7 +260,7 @@ sudo systemctl start mediafetch
 sudo systemctl status mediafetch
 ```
 
-**7. (Optional) Configure Nginx as a reverse proxy**
+#### 7. (Optional) Configure Nginx as a reverse proxy
 
 ```nginx
 server {
@@ -283,11 +284,11 @@ server {
 All configuration is managed through environment variables or a `.env` file placed in the `backend/` directory.
 
 | Variable | Required | Default | Description |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `DATABASE_URL` | **Yes** | `postgresql://mediafetch:mediafetch123@localhost:5432/mediafetch_db` | SQLAlchemy database connection string. Supports PostgreSQL and SQLite (`sqlite:///./mediafetch.db`). |
 | `LLM_API_URL` | No | `http://localhost:11434/api/generate` | URL of the LLM API endpoint (Ollama-compatible). |
 | `LLM_MODEL` | No | `qwen2:0.5b` | Model name to use for LLM parsing. |
-| `QWEN_API_KEY` | No | _(empty)_ | API key for the LLM service. **If empty, the LLM tier is skipped and the regex fallback is used automatically.** |
+| `QWEN_API_KEY` | No | *(empty)_ | API key for the LLM service. **If empty, the LLM tier is skipped and the regex fallback is used automatically.** |
 
 > **Note:** The `llm_parser.py` module reads `LLM_API_URL` and `LLM_MODEL` directly from environment variables via `os.getenv()`, with its own hardcoded defaults (`http://localhost:42005/v1/chat/completions`, model `coder-model`). To override these, set the environment variables explicitly in your `.env` file.
 
@@ -304,15 +305,16 @@ LLM_MODEL=qwen2:0.5b
 
 ## API Endpoints
 
-All endpoints are served from the backend at `http://<server-host>:8000`.
+All endpoints are served from the backend at `http://SERVER_HOST:8000` (replace `SERVER_HOST` with your server's hostname or IP address).
 
 ### Health Check
 
-```
+```http
 GET /api/health
 ```
 
-**Response (200):**
+#### Health Check — Response (200)
+
 ```json
 { "status": "ok" }
 ```
@@ -321,11 +323,12 @@ GET /api/health
 
 ### Create Download Task
 
-```
+```http
 POST /download
 ```
 
-**Request Body:**
+#### Create Download Task — Request Body
+
 ```json
 {
   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
@@ -334,7 +337,8 @@ POST /download
 }
 ```
 
-**Response (200):**
+#### Create Download Task — Response (200)
+
 ```json
 {
   "task_id": 1,
@@ -343,7 +347,8 @@ POST /download
 }
 ```
 
-**Validation rules:**
+#### Create Download Task — Validation rules
+
 - `format` must be `"mp3"` or `"mp4"`.
 - `quality` must be `"low"`, `"medium"`, or `"high"`.
 - Invalid values return `400 Bad Request`.
@@ -352,11 +357,12 @@ POST /download
 
 ### List All Tasks
 
-```
+```http
 GET /tasks
 ```
 
-**Response (200):**
+#### List All Tasks — Response (200)
+
 ```json
 [
   {
@@ -379,13 +385,16 @@ Tasks are ordered by `created_at DESC` (newest first).
 
 ### Get Single Task
 
-```
+```http
 GET /tasks/{task_id}
 ```
 
-**Response (200):** Same object as in the list response.
+#### Get Single Task — Response (200)
 
-**Response (404):**
+Same object as in the list response.
+
+#### Get Single Task — Response (404)
+
 ```json
 { "detail": "Task not found" }
 ```
@@ -394,13 +403,14 @@ GET /tasks/{task_id}
 
 ### Download File
 
-```
+```http
 GET /download/{task_id}
 ```
 
 Returns the file as an `application/octet-stream` download.
 
-**Error responses:**
+#### Download File — Error responses
+
 - `404` — Task not found.
 - `400` — File not ready yet (task is not `COMPLETED`).
 - `404` — File not found on server (task is `COMPLETED` but file was deleted from disk).
@@ -409,18 +419,20 @@ Returns the file as an `application/octet-stream` download.
 
 ### Parse Natural Language Message
 
-```
+```http
 POST /llm/parse
 ```
 
-**Request Body:**
+#### Parse Message — Request Body
+
 ```json
 {
   "message": "download this video as MP4: https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 }
 ```
 
-**Response (200):**
+#### Parse Message — Response (200)
+
 ```json
 {
   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
@@ -431,7 +443,8 @@ POST /llm/parse
 }
 ```
 
-**How it works:**
+#### Parse Message — How it works
+
 1. If `QWEN_API_KEY` is set, the message is sent to the configured LLM endpoint with a system prompt that instructs the model to return structured JSON.
 2. If the LLM call fails or no API key is set, a **regex-based fallback** parses the message for URLs, format keywords (`mp3`, `mp4`, `audio`, `video`), and quality keywords (`high`, `low`).
 3. If no URL is found, the remaining text (minus stopwords) is returned as `search_query`.
@@ -441,7 +454,7 @@ POST /llm/parse
 ### Static Files (Web Interface)
 
 | Path | Content |
-|---|---|
+| --- | --- |
 | `GET /` | `frontend/index.html` |
 | `GET /style.css` | `frontend/style.css` |
 | `GET /app.js` | `frontend/app.js` |
@@ -455,7 +468,7 @@ The web interface is a single-page application with three main sections:
 ### 1. Manual Download Form (Left Column)
 
 | Field | Description |
-|---|---|
+| --- | --- |
 | **URL** | Paste a YouTube or VK video URL. |
 | **Format** | Select **MP3** (audio only) or **MP4** (video). |
 | **Quality** | Select **Low**, **Medium**, or **High**. |
@@ -469,10 +482,10 @@ Type natural language requests. The assistant will:
 - Fill in the download form fields automatically.
 - Confirm the parsed result with a message.
 
-**Example messages that work:**
+#### Chat Assistant — Example messages that work
 
 | Message | Parsed Result |
-|---|---|
+| --- | --- |
 | `download this video as MP4: https://youtube.com/...` | URL + mp4 |
 | `save audio from https://vk.com/video...` | URL + mp3 |
 | `get me this in high quality mp3: https://...` | URL + mp3 + high |
@@ -495,7 +508,7 @@ The task list **auto-refreshes every 3 seconds**. No page reload needed.
 ## Known Limitations (v1)
 
 | # | Limitation | Workaround / Notes |
-|---|---|---|
+| --- | --- | --- |
 | 1 | **No URL validation** — The backend passes the URL directly to yt-dlp without pre-validation. Invalid URLs result in a failed task with a yt-dlp error. | The error message in the task list shows the root cause. |
 | 2 | **Medium and High quality map to the same yt-dlp setting** (`best`). | Use `low` to get the `worst` quality. True resolution-specific selection is planned for v2. |
 | 3 | **Search functionality is not implemented** — If no URL is provided, the `search_query` is extracted but no actual search is performed. | Users must provide a direct URL. |
@@ -509,16 +522,17 @@ The task list **auto-refreshes every 3 seconds**. No page reload needed.
 
 ## Planned for v2
 
-- [ ] **Real search integration** — Use yt-dlp search or a third-party API to find videos by query.
-- [ ] **Download progress tracking** — Real-time progress percentage via WebSockets.
-- [ ] **File cleanup** — Automatic deletion of files older than N days.
-- [ ] **Authentication** — User accounts with API key or session-based auth.
-- [ ] **Resolution-specific quality** — Allow users to pick specific resolutions (360p, 720p, 1080p).
-- [ ] **Batch downloads** — Submit multiple URLs at once.
-- [ ] **Docker compose for the backend** — Full containerization of the FastAPI app alongside PostgreSQL.
-- [ ] **Unified LLM configuration** — Resolve the discrepancy between `config.py` and `llm_parser.py` defaults.
-- [ ] **Rate limiting** — Prevent abuse with per-IP or per-user request limits.
-- [ ] **Unit & integration tests** — Full test suite with pytest.
+- [ ] **Smart file naming** — Downloaded files will use metadata from yt-dlp to generate readable names. For audio: `Artist - Title.mp3` (or `Channel - Title.mp3` if artist is missing). For video: `Channel - Video Title.mp4`. The generated name is stored in the database and shown in the frontend.
+- [ ] **Real search integration** — Allow users to type a search query (song name, video title) instead of a URL. The backend will use yt-dlp search (`ytsearch5:query`) to find top results. Users can then pick which result to download.
+- [ ] **Download progress tracking** — Replace polling with Server‑Sent Events (SSE) or WebSockets for real‑time progress updates (percentage, estimated time, download speed). The frontend will show a progress bar for each active task.
+- [ ] **File cleanup** — Automatic deletion of downloaded files older than N days (configurable via environment variable). A background scheduler (e.g., APScheduler) will run daily.
+- [ ] **Authentication** — Simple API‑key authentication (user supplies a key in the frontend, stored in `localStorage`). Optional: session‑based auth for multi‑user support.
+- [ ] **Resolution‑specific quality** — Replace the `low/medium/high` dropdown with actual resolution options for videos (360p, 720p, 1080p, best). For audio, offer bitrate options (128k, 192k, 320k).
+- [ ] **Batch downloads** — Allow users to submit multiple URLs or search queries at once (one per line). Each entry becomes a separate task.
+- [ ] **Full Dockerization** — Dockerize the FastAPI backend along with PostgreSQL and (optionally) Redis for rate limiting. Use a single `docker-compose.yml` to orchestrate all services.
+- [ ] **Unified LLM configuration** — Remove `config.py` and rely exclusively on environment variables (`LLM_API_URL`, `LLM_MODEL`, `QWEN_API_KEY`). Ensure `llm_parser.py` uses the same variables without hardcoded fallbacks.
+- [ ] **Rate limiting** — Use `slowapi` or `redis` to limit requests per IP (e.g., 10 downloads per minute, 100 requests per hour).
+- [ ] **Unit & integration tests** — Full test suite with `pytest` covering: database models, download task lifecycle, LLM parser (regex fallback), and API endpoints (using FastAPI `TestClient`).
 
 ---
 
@@ -526,9 +540,12 @@ The task list **auto-refreshes every 3 seconds**. No page reload needed.
 
 ### Server won't start
 
-**Problem:** `uvicorn` fails with an import or module error.
+#### Server won't start — Problem
 
-**Solution:**
+`uvicorn` fails with an import or module error.
+
+#### Server won't start — Solution
+
 ```bash
 cd backend
 source venv/bin/activate
@@ -541,9 +558,12 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 
 ### Database connection error
 
-**Problem:** `sqlalchemy.exc.OperationalError: could not connect to server`.
+#### Database connection error — Problem
 
-**Solution:**
+`sqlalchemy.exc.OperationalError: could not connect to server`.
+
+#### Database connection error — Solution
+
 ```bash
 # Check that the PostgreSQL container is running:
 docker ps | grep postgres
@@ -558,9 +578,12 @@ cd backend && docker-compose up -d
 
 ### ffmpeg not found
 
-**Problem:** MP3 downloads fail with `ffmpeg not found` or `ffprobe/avconv not found`.
+#### ffmpeg not found — Problem
 
-**Solution:**
+MP3 downloads fail with `ffmpeg not found` or `ffprobe/avconv not found`.
+
+#### ffmpeg not found — Solution
+
 ```bash
 # Install ffmpeg:
 sudo apt install -y ffmpeg
@@ -573,9 +596,12 @@ ffmpeg -version
 
 ### yt-dlp errors with "Unsupported URL"
 
-**Problem:** Download fails with an unsupported URL error.
+#### yt-dlp errors with "Unsupported URL" — Problem
 
-**Solution:**
+Download fails with an unsupported URL error.
+
+#### yt-dlp errors with "Unsupported URL" — Solution
+
 - Ensure the URL is a valid YouTube or VK URL.
 - Update yt-dlp: `pip install --upgrade yt-dlp`.
 - Some URLs (e.g., playlists, Shorts, or live streams) may not be fully supported.
@@ -584,22 +610,30 @@ ffmpeg -version
 
 ### LLM chat doesn't parse messages correctly
 
-**Problem:** The chat assistant always uses the regex fallback or returns empty fields.
+#### LLM chat doesn't parse messages correctly — Problem
 
-**Solution:**
+The chat assistant always uses the regex fallback or returns empty fields.
+
+#### LLM chat doesn't parse messages correctly — Solution
+
 - If you want LLM-based parsing, set `QWEN_API_KEY` and verify `LLM_API_URL` is accessible:
+
   ```bash
   curl -H "X-API-Key: $QWEN_API_KEY" -X POST "$LLM_API_URL" -d '{"model":"qwen2:0.5b","prompt":"test"}'
   ```
+
 - The regex fallback should still handle basic patterns like `mp3`, `mp4`, `high`, `low`, and URLs.
 
 ---
 
 ### Task stuck in DOWNLOADING state
 
-**Problem:** A task remains in `DOWNLOADING` for a very long time or never completes.
+#### Task stuck in DOWNLOADING state — Problem
 
-**Solution:**
+A task remains in `DOWNLOADING` for a very long time or never completes.
+
+#### Task stuck in DOWNLOADING state — Solution
+
 - Large files or slow network connections can cause long download times.
 - Check the backend logs for errors: `tail -f backend/logs/uvicorn.log` (if logging is configured).
 - If the task is truly stuck, restart the server. The task will remain in its last committed state.
@@ -608,16 +642,19 @@ ffmpeg -version
 
 ### CORS errors in browser console
 
-**Problem:** Frontend fetch calls fail with CORS errors.
+#### CORS errors in browser console — Problem
 
-**Solution:**
-- CORS is configured to allow all origins (`allow_origens=["*"]`) in `main.py`. If you see CORS errors, ensure the frontend is being served from the **same origin** as the backend (i.e., access the app via `http://<server>:8000/`, not by opening `index.html` directly from the file system).
+Frontend fetch calls fail with CORS errors.
+
+#### CORS errors in browser console — Solution
+
+- CORS is configured to allow all origins (`allow_origins=["*"]`) in `main.py`. If you see CORS errors, ensure the frontend is being served from the **same origin** as the backend (i.e., access the app via `http://SERVER:8000/`, not by opening `index.html` directly from the file system).
 
 ---
 
 ## Project Structure
 
-```
+```text
 MediaFetch/
 ├── .env.example            # Environment variables template
 ├── .gitignore
@@ -650,7 +687,7 @@ MediaFetch/
 
 ## Testing
 
-For detailed step-by-step testing instructions, see [docs/TESTING-INSTRUCTIONS.md](docs/TESTING-INSTRUCTIONS.md).
+For detailed step-by-step testing instructions, see [docs/TESTING-INSTRUCTIONS.md](./docs/TESTING-INSTRUCTIONS.md).
 
 Quick smoke test:
 
