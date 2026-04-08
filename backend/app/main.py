@@ -46,7 +46,6 @@ async def serve_js():
 
 def process_download(task_id: int, url: str, format_type: str, quality: str):
     """Background task to process download"""
-    # Create a new db session for background task (avoid shared session issues)
     from .database import SessionLocal
     db = SessionLocal()
     try:
@@ -55,7 +54,7 @@ def process_download(task_id: int, url: str, format_type: str, quality: str):
             task.status = models.TaskStatus.DOWNLOADING
             db.commit()
 
-            file_path, error = download_media(url, format_type, quality, task_id)
+            file_path, display_name, error = download_media(url, format_type, quality, task_id)
 
             if error:
                 task.status = models.TaskStatus.FAILED
@@ -63,6 +62,7 @@ def process_download(task_id: int, url: str, format_type: str, quality: str):
             else:
                 task.status = models.TaskStatus.COMPLETED
                 task.file_path = file_path
+                task.display_name = display_name
                 update_progress(task_id, 100)
             db.commit()
     finally:
@@ -127,11 +127,17 @@ def download_file(task_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="File not ready yet")
     
     if not task.file_path or not os.path.exists(task.file_path):
-        raise HTTPException(status_code=404, detail="File not found on server")
+        raise HTTPException(status_code=404, detail=f"File not found on server: {task.file_path}")
+    
+    # Use display_name for download filename if available
+    if task.display_name:
+        download_filename = f"{task.display_name}.{task.format}"
+    else:
+        download_filename = os.path.basename(task.file_path)
     
     return FileResponse(
         path=task.file_path,
-        filename=os.path.basename(task.file_path),
+        filename=download_filename,
         media_type="application/octet-stream"
     )
 

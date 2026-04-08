@@ -142,6 +142,7 @@ function displayTasks(tasks) {
             </div>
             <div class="task-details">
                 📁 ${task.format.toUpperCase()} • 🎚️ ${task.quality}
+                ${task.display_name ? ` • 📄 ${task.display_name}` : ''}
                 ${task.created_at ? ` • 🕐 ${formatDate(task.created_at)}` : ''}
             </div>
             ${task.status === 'downloading' ? `
@@ -152,7 +153,7 @@ function displayTasks(tasks) {
             ` : ''}
             ${task.status === 'completed' && task.id ? `
                 <a href="${API_BASE_URL}/download/${task.id}" class="download-link" download>
-                    ⬇️ Download File
+                    ⬇️ Download ${task.display_name ? task.display_name : 'File'}
                 </a>
             ` : ''}
             ${task.status === 'failed' && task.error_message ? `

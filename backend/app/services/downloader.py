@@ -1,5 +1,6 @@
 import yt_dlp
 import os
+import re
 from pathlib import Path
 import threading
 from typing import Dict
@@ -40,9 +41,24 @@ def get_resolution_format(resolution: str, format_type: str = None) -> str:
     }
     return mapping.get(resolution, 'best')
 
-def download_media(url: str, format_type: str, quality: str, task_id: int) -> tuple[str, str]:
+def generate_display_name(info: dict, format_type: str) -> str:
     """
-    Download media from URL and return (file_path, error_message)
+    Generate a readable filename from video metadata.
+    For audio: Artist-Title.mp3
+    For video: Title.mp4
+    """
+    title = info.get('title', 'unknown')
+    
+    # Remove invalid filename characters and replace spaces with underscores
+    def clean_filename(s: str) -> str:
+        s = s.replace(' ', '_')
+        return re.sub(r'[<>:"/\\|?*]', '', s).strip()
+    
+    return clean_filename(title)
+    
+def download_media(url: str, format_type: str, quality: str, task_id: int) -> tuple[str, str, str]:
+    """
+    Download media from URL and return (file_path, display_name, error_message)
     """
     output_template = str(DOWNLOAD_DIR / f"task_{task_id}_%(title)s.%(ext)s")
     
@@ -52,7 +68,6 @@ def download_media(url: str, format_type: str, quality: str, task_id: int) -> tu
             if total:
                 percent = int(d['downloaded_bytes'] / total * 100)
                 update_progress(task_id, percent)
-
 
     if format_type == 'mp3':
         ydl_opts = {
@@ -68,28 +83,37 @@ def download_media(url: str, format_type: str, quality: str, task_id: int) -> tu
             'progress_hooks': [progress_hook],
         }
     else:
-        format_str = get_resolution_format(quality, format_type)
+        format_str = get_resolution_format(quality)
         ydl_opts = {
             'format': format_str,
             'outtmpl': output_template,
             'quiet': True,
             'no_warnings': True,
+            'progress_hooks': [progress_hook],
         }
     
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
-            # Get the path to the downloaded file
+            
+            # Generate display name from metadata
+            display_name = generate_display_name(info, format_type)
+            
+            # Get the actual downloaded file path
             if format_type == 'mp3':
-                # For mp3 the file will have a .mp3 extension
                 filename = ydl.prepare_filename(info).replace('.webm', '.mp3').replace('.m4a', '.mp3')
                 if not os.path.exists(filename):
-                    # Try to find the file with a different extension
                     base = os.path.splitext(ydl.prepare_filename(info))[0]
                     filename = base + '.mp3'
             else:
                 filename = ydl.prepare_filename(info)
             
-            return filename, None
+            # Rename to pretty name
+            pretty_path = DOWNLOAD_DIR / f"{display_name}.{format_type}"
+            if os.path.exists(filename) and filename != str(pretty_path):
+                os.rename(filename, pretty_path)
+                filename = str(pretty_path)
+            
+            return filename, display_name, None
     except Exception as e:
-        return None, str(e)
+        return None, None, str(e)

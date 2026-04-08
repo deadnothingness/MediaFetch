@@ -32,6 +32,7 @@ services:
       FRONTEND_PATH: /frontend
     volumes:
       - downloads_data:/app/downloads
+      - ./downloads:/app/downloads
     depends_on:
       postgres:
         condition: service_healthy

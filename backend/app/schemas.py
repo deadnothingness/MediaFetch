@@ -23,6 +23,7 @@ class TaskResponse(BaseModel):
     error_message: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
+    display_name: Optional[str] = None
 
 class LLMParseRequest(BaseModel):
     """Request model for LLM parsing endpoint"""

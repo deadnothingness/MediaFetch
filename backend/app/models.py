@@ -22,3 +22,4 @@ class DownloadTask(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     progress = Column(Integer, default=0)  # 0-100 percentage
+    display_name = Column(String, nullable=True)  # Human-readable filename
