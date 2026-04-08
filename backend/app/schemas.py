@@ -6,7 +6,7 @@ from .models import TaskStatus
 class DownloadRequest(BaseModel):
     url: str
     format: str  # 'mp3' or 'mp4'
-    quality: str  # 'low', 'medium', 'high'
+    quality: str  # for video: '360p', '720p', '1080p', 'best'; for audio: '128k', '192k', '320k'
 
 class DownloadResponse(BaseModel):
     task_id: int

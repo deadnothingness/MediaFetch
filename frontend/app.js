@@ -9,6 +9,50 @@ const chatInput = document.getElementById('chatInput');
 const chatSendBtn = document.getElementById('chatSendBtn');
 const chatMessages = document.getElementById('chatMessages');
 
+// Quality options
+const videoQualities = [
+    { value: '360p', label: '360p (Video)' },
+    { value: '720p', label: '720p (Video)' },
+    { value: '1080p', label: '1080p (Video)' },
+    { value: 'best', label: 'Best (Video)' }
+];
+
+const audioQualities = [
+    { value: '128k', label: '128k (Audio)' },
+    { value: '192k', label: '192k (Audio)' },
+    { value: '320k', label: '320k (Audio)' }
+];
+
+function updateQualityOptions() {
+    const formatSelect = document.getElementById('format');
+    const qualitySelect = document.getElementById('quality');
+    
+    if (!formatSelect || !qualitySelect) return;
+    
+    const selectedFormat = formatSelect.value;
+    let options = [];
+    
+    if (selectedFormat === 'mp4') {
+        options = videoQualities;
+    } else if (selectedFormat === 'mp3') {
+        options = audioQualities;
+    }
+    
+    // Clear current options
+    qualitySelect.innerHTML = '';
+    
+    // Add new options
+    options.forEach(opt => {
+        const option = document.createElement('option');
+        option.value = opt.value;
+        option.textContent = opt.label;
+        if (opt.value === '720p' || opt.value === '192k') {
+            option.selected = true;
+        }
+        qualitySelect.appendChild(option);
+    });
+}
+
 // ---- Helper functions ----
 
 function formatStatus(status) {
@@ -97,7 +141,7 @@ function displayTasks(tasks) {
                 🔗 ${truncateUrl(task.url)}
             </div>
             <div class="task-details">
-                📁 ${task.format.toUpperCase()} • 🎚️ ${task.quality} quality
+                📁 ${task.format.toUpperCase()} • 🎚️ ${task.quality}
                 ${task.created_at ? ` • 🕐 ${formatDate(task.created_at)}` : ''}
             </div>
             ${task.status === 'downloading' ? `
@@ -228,10 +272,15 @@ function fillFormWithParsedData(parsed) {
 
     if (parsed.format && (parsed.format === 'mp3' || parsed.format === 'mp4')) {
         formatSelect.value = parsed.format;
+        // Update quality options based on new format
+        updateQualityOptions();
     }
 
-    if (parsed.quality && ['low', 'medium', 'high'].includes(parsed.quality)) {
-        qualitySelect.value = parsed.quality;
+    if (parsed.quality && ['360p', '720p', '1080p', 'best', '128k', '192k', '320k'].includes(parsed.quality)) {
+        // Small delay to ensure options are loaded
+        setTimeout(() => {
+            qualitySelect.value = parsed.quality;
+        }, 50);
     }
 
     if (parsed.search_query && !parsed.url) {
@@ -327,6 +376,14 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('beforeunload', () => {
         stopAutoRefresh();
     });
+
+    // Add event listener for format change
+    const formatSelect = document.getElementById('format');
+    if (formatSelect) {
+        formatSelect.addEventListener('change', updateQualityOptions);
+        // Initial call to set default quality options
+        updateQualityOptions();
+    }
 });
 
 function subscribeToProgress(taskId, taskCard) {

@@ -77,8 +77,9 @@ async def create_download(
     if request.format not in ['mp3', 'mp4']:
         raise HTTPException(status_code=400, detail="Format must be 'mp3' or 'mp4'")
     
-    if request.quality not in ['low', 'medium', 'high']:
-        raise HTTPException(status_code=400, detail="Quality must be 'low', 'medium', or 'high'")
+    allowed_qualities = ['360p', '720p', '1080p', 'best', '128k', '192k', '320k']
+    if request.quality not in allowed_qualities:
+        raise HTTPException(status_code=400, detail=f"Quality must be one of: {', '.join(allowed_qualities)}")
     
     task = models.DownloadTask(
         url=request.url,

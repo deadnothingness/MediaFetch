@@ -15,7 +15,7 @@ class DownloadTask(Base):
     id = Column(Integer, primary_key=True, index=True)
     url = Column(String, nullable=False)
     format = Column(String, nullable=False)  # 'mp3' or 'mp4'
-    quality = Column(String, nullable=False) # 'low', 'medium', 'high'
+    quality = Column(String, nullable=False)  # '360p', '720p', '1080p', 'best' for video; '128k', '192k', '320k' for audio
     status = Column(Enum(TaskStatus), default=TaskStatus.PENDING)
     file_path = Column(String, nullable=True)
     error_message = Column(String, nullable=True)

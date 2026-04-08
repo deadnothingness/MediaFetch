@@ -22,21 +22,23 @@ def get_progress(task_id: int) -> int:
 DOWNLOAD_DIR = Path(__file__).parent.parent.parent / "downloads"
 DOWNLOAD_DIR.mkdir(exist_ok=True)
 
-def get_quality_format(quality: str, format_type: str):
-    """Convert quality and format to yt-dlp format string"""
-    quality_map = {
-        'low': 'worst',
-        'medium': 'best',
-        'high': 'best'
-    }
+def get_resolution_format(resolution: str, format_type: str = None) -> str:
+    """Convert resolution to yt-dlp format string.
     
-    if format_type == 'mp3':
-        # For audio
-        return 'bestaudio/best'
-    else:
-        # For video
-        quality_str = quality_map.get(quality, 'best')
-        return f'{quality_str}[ext=mp4]/best[ext=mp4]/best'
+    Args:
+        resolution: Quality setting (e.g., '720p', '1080p', 'best')
+        format_type: Ignored, kept for compatibility
+    
+    Returns:
+        yt-dlp format string
+    """
+    mapping = {
+        '360p': 'best[height<=360]',
+        '720p': 'best[height<=720]',
+        '1080p': 'best[height<=1080]',
+        'best': 'best',
+    }
+    return mapping.get(resolution, 'best')
 
 def download_media(url: str, format_type: str, quality: str, task_id: int) -> tuple[str, str]:
     """
@@ -66,7 +68,7 @@ def download_media(url: str, format_type: str, quality: str, task_id: int) -> tu
             'progress_hooks': [progress_hook],
         }
     else:
-        format_str = get_quality_format(quality, format_type)
+        format_str = get_resolution_format(quality, format_type)
         ydl_opts = {
             'format': format_str,
             'outtmpl': output_template,

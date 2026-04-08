@@ -29,7 +29,7 @@ def test_create_download_invalid_quality(client: TestClient):
     }
     response = client.post("/download", json=payload)
     assert response.status_code == 400
-    assert "Quality must be" in response.text
+    assert "Quality must be one of" in response.text
 
 
 def test_create_download_valid(client: TestClient):
@@ -37,7 +37,7 @@ def test_create_download_valid(client: TestClient):
     payload = {
         "url": "https://vkvideo.ru/video-213580023_456239058?list=ln-9sKY6zxP6QuY75nqwD",
         "format": "mp4",
-        "quality": "medium",
+        "quality": "720p",
     }
     response = client.post("/download", json=payload)
     assert response.status_code == 200
