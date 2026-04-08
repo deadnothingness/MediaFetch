@@ -6,9 +6,12 @@ from .database import engine, Base, get_db
 from . import models, schemas
 from .services.downloader import download_media
 from .services.llm_parser import parse_request
-from .config import settings
+from pathlib import Path
 
 import os
+
+# Path to frontend folder – read from env or use default
+FRONTEND_PATH = os.getenv("FRONTEND_PATH", str(Path(__file__).parent.parent.parent / "frontend"))
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -23,9 +26,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Path to frontend folder
-FRONTEND_PATH = settings.FRONTEND_PATH
 
 @app.get("/")
 async def serve_frontend():
