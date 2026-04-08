@@ -1,9 +1,15 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from .config import settings
 
-engine = create_engine(settings.DATABASE_URL)
+# Read database URL from environment, fallback to local PostgreSQL default
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql://mediafetch:mediafetch123@localhost:5432/mediafetch_db"
+)
+
+engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
