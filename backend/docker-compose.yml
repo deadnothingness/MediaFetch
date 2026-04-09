@@ -1,0 +1,43 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mediafetch_postgres
+    environment:
+      POSTGRES_USER: mediafetch
+      POSTGRES_PASSWORD: mediafetch123
+      POSTGRES_DB: mediafetch_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mediafetch -d mediafetch_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    container_name: mediafetch_backend
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://mediafetch:mediafetch123@postgres:5432/mediafetch_db
+      LLM_API_URL: ${LLM_API_URL:-http://qwen-code-api:8080/v1/chat/completions}
+      LLM_MODEL: ${LLM_MODEL:-coder-model}
+      QWEN_API_KEY: ${QWEN_API_KEY:-}
+      FRONTEND_PATH: /frontend
+    volumes:
+      - downloads_data:/app/downloads
+      - ./downloads:/app/downloads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  downloads_data:

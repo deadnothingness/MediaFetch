@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediaFetch - Download videos and audio from VK & YouTube</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📥 MediaFetch</h1>
+            <p>Download audio and video from VK and YouTube</p>
+        </header>
+
+        <!-- Two-column layout for form and chat -->
+        <div class="two-columns">
+            <!-- Left: Manual download form -->
+            <div class="download-form">
+                <h2>📝 Manual Download</h2>
+                <form id="downloadForm">
+                    <div class="form-group">
+                        <label for="url">URL or search query:</label>
+                        <input type="text" id="url" name="url" placeholder="..." required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="format">Format:</label>
+                            <select id="format" name="format">
+                                <option value="mp4">MP4 (Video)</option>
+                                <option value="mp3">MP3 (Audio)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="quality">Quality:</label>
+                            <select id="quality" name="quality">
+                                <option value="">Select format first</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submitBtn">Start Download</button>
+                </form>
+            </div>
+
+            <!-- Right: AI Chat Widget -->
+            <div class="chat-widget">
+                <h2>🤖 AI Assistant</h2>
+                <p class="chat-description">Describe what you want in natural language:</p>
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-message bot">
+                        👋 Hi! I can help you download media. Try saying:<br>
+                        "Download this video as MP4: https://youtu.be/..."<br>
+                        "Save audio from this link in high quality"
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" id="chatInput" placeholder="Ask me to download something..." class="chat-input">
+                    <button id="chatSendBtn" class="chat-send">Send</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tasks list -->
+        <div class="tasks-section">
+            <h2>📋 Downloads</h2>
+            <div id="tasksList" class="tasks-list">
+                <div class="loading">Loading tasks...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
