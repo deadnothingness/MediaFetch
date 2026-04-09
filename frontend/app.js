@@ -38,10 +38,8 @@ function updateQualityOptions() {
         options = audioQualities;
     }
     
-    // Clear current options
     qualitySelect.innerHTML = '';
     
-    // Add new options
     options.forEach(opt => {
         const option = document.createElement('option');
         option.value = opt.value;
@@ -164,7 +162,6 @@ function displayTasks(tasks) {
         </div>
     `).join('');
     
-    // Subscribe to progress for downloading tasks
     tasks.forEach(task => {
         if (task.status === 'downloading') {
             const taskCard = document.querySelector(`.task-card[data-task-id="${task.id}"]`);
@@ -198,10 +195,7 @@ async function startDownload(url, format, quality) {
 
         const result = await response.json();
         console.log('Download started:', result);
-
-        // Refresh tasks list immediately
         await fetchTasks();
-
         return result;
     } catch (error) {
         console.error('Error starting download:', error);
@@ -273,12 +267,10 @@ function fillFormWithParsedData(parsed) {
 
     if (parsed.format && (parsed.format === 'mp3' || parsed.format === 'mp4')) {
         formatSelect.value = parsed.format;
-        // Update quality options based on new format
         updateQualityOptions();
     }
 
     if (parsed.quality && ['360p', '720p', '1080p', 'best', '128k', '192k', '320k'].includes(parsed.quality)) {
-        // Small delay to ensure options are loaded
         setTimeout(() => {
             qualitySelect.value = parsed.quality;
         }, 50);
@@ -378,11 +370,9 @@ document.addEventListener('DOMContentLoaded', () => {
         stopAutoRefresh();
     });
 
-    // Add event listener for format change
     const formatSelect = document.getElementById('format');
     if (formatSelect) {
         formatSelect.addEventListener('change', updateQualityOptions);
-        // Initial call to set default quality options
         updateQualityOptions();
     }
 });
@@ -405,11 +395,9 @@ function subscribeToProgress(taskId, taskCard) {
         
         if (data.status === 'completed') {
             eventSource.close();
-            // Refresh tasks to show download button
             fetchTasks();
         } else if (data.status === 'failed') {
             eventSource.close();
-            // Show error
             const errorDiv = document.createElement('div');
             errorDiv.className = 'error-message';
             errorDiv.textContent = `⚠️ Error: ${data.error || 'Download failed'}`;
@@ -421,3 +409,49 @@ function subscribeToProgress(taskId, taskCard) {
         eventSource.close();
     };
 }
+
+// ========== FORCE INITIALIZATION ==========
+(function() {
+    function forceInit() {
+        const formatSelect = document.getElementById('format');
+        const qualitySelect = document.getElementById('quality');
+        
+        if (!formatSelect || !qualitySelect) {
+            console.error('Elements not found, retrying...');
+            setTimeout(forceInit, 100);
+            return;
+        }
+        
+        const videoOpts = ['360p (Video)', '720p (Video)', '1080p (Video)', 'Best (Video)'];
+        const audioOpts = ['128k (Audio)', '192k (Audio)', '320k (Audio)'];
+        const videoVals = ['360p', '720p', '1080p', 'best'];
+        const audioVals = ['128k', '192k', '320k'];
+        
+        function update() {
+            const isVideo = formatSelect.value === 'mp4';
+            const options = isVideo ? videoOpts : audioOpts;
+            const values = isVideo ? videoVals : audioVals;
+            
+            qualitySelect.innerHTML = '';
+            options.forEach((label, idx) => {
+                const option = document.createElement('option');
+                option.value = values[idx];
+                option.textContent = label;
+                if ((isVideo && values[idx] === '720p') || (!isVideo && values[idx] === '192k')) {
+                    option.selected = true;
+                }
+                qualitySelect.appendChild(option);
+            });
+        }
+        
+        formatSelect.addEventListener('change', update);
+        update();
+        console.log('Quality select initialized');
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', forceInit);
+    } else {
+        forceInit();
+    }
+})();
